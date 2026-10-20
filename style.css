@@ -1,0 +1,548 @@
+/* ============================================================
+   Anime Gesture Attacks - Cyber Anime Aesthetic Stylesheet
+   ============================================================ */
+
+:root {
+    --bg-dark: #07090e;
+    --panel-bg: rgba(13, 19, 33, 0.82);
+    --panel-border: rgba(0, 240, 255, 0.25);
+    --dbz-gold: #fbbf24;
+    --naruto-blue: #0ea5e9;
+    --naruto-orange: #f97316;
+    --jjk-purple: #a855f7;
+    --sukuna-crimson: #e11d48;
+    --cyber-cyan: #00f0ff;
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ----------------------------------------------------------------
+   HEADER BAR
+   ---------------------------------------------------------------- */
+.header-bar {
+    height: 60px;
+    background: linear-gradient(180deg, rgba(13, 19, 33, 0.95) 0%, rgba(7, 9, 14, 0.8) 100%);
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+}
+
+.brand-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-logo-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 0 8px var(--cyber-cyan));
+    animation: pulseIcon 2s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px var(--cyber-cyan)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 14px var(--dbz-gold)); }
+}
+
+.brand-text h1 {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ffffff 0%, var(--cyber-cyan) 50%, var(--dbz-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.brand-text span {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+/* Universe Mode Selector Tabs */
+.mode-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tab-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tab-btn.active[data-mode="all"] {
+    background: linear-gradient(135deg, #0284c7, #9333ea);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(147, 51, 234, 0.5);
+}
+
+.tab-btn.active[data-mode="dbz"] {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: #000;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.tab-btn.active[data-mode="naruto"] {
+    background: linear-gradient(135deg, #0284c7, #06b6d4);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+}
+
+.tab-btn.active[data-mode="jjk"] {
+    background: linear-gradient(135deg, #7e22ce, #e11d48);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(225, 29, 72, 0.5);
+}
+
+/* Header Action Controls */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-main);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--cyber-cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.action-btn.active {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: var(--cyber-cyan);
+    color: var(--cyber-cyan);
+}
+
+/* ----------------------------------------------------------------
+   MAIN WORKSPACE & CAMERA STAGE
+   ---------------------------------------------------------------- */
+.stage-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    overflow: hidden;
+}
+
+/* Video Feed (mirrored by default) */
+#webcamVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror camera */
+    z-index: 1;
+}
+
+#webcamVideo.unmirrored {
+    transform: scaleX(1);
+}
+
+/* Canvas layers */
+#vfxCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+
+#skeletonCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 6;
+    pointer-events: none;
+}
+
+/* ----------------------------------------------------------------
+   HUD OVERLAYS & STATUS
+   ---------------------------------------------------------------- */
+.hud-status-card {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(7, 10, 19, 0.75);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 12px 18px;
+    z-index: 20;
+    min-width: 220px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.hud-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 6px;
+    color: var(--text-dim);
+}
+
+.hud-row b {
+    color: var(--text-main);
+}
+
+.tracking-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    margin-right: 6px;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+.tracking-indicator.inactive {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
+
+/* Energy Charge Gauge */
+.charge-bar-container {
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    height: 6px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.charge-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00e5ff, #ffd700);
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px #00e5ff;
+}
+
+/* Target Reticle for Amaterasu */
+.target-reticle {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 2px dashed #ff003c;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    animation: rotateReticle 4s linear infinite;
+}
+
+@keyframes rotateReticle {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ----------------------------------------------------------------
+   BOTTOM ATTACK CONTROL DOCK
+   ---------------------------------------------------------------- */
+.bottom-dock {
+    height: 110px;
+    background: linear-gradient(0deg, rgba(7, 9, 14, 0.95) 0%, rgba(13, 19, 33, 0.85) 100%);
+    border-top: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    overflow-x: auto;
+    z-index: 50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--panel-border) transparent;
+}
+
+.attack-card {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 140px;
+    position: relative;
+    overflow: hidden;
+}
+
+.attack-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--cyber-cyan));
+}
+
+.attack-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--card-accent, var(--cyber-cyan));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.attack-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.attack-card-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.attack-card-badge {
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+}
+
+.attack-card-gesture {
+    font-size: 10.5px;
+    color: var(--text-dim);
+}
+
+.attack-card-btn {
+    margin-top: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 10px;
+    color: var(--card-accent, var(--cyber-cyan));
+    font-weight: 700;
+    text-align: center;
+    transition: background 0.15s ease;
+}
+
+.attack-card:hover .attack-card-btn {
+    background: var(--card-accent, var(--cyber-cyan));
+    color: #000;
+}
+
+/* Card theme accents */
+.attack-card[data-anime="dbz"] { --card-accent: var(--dbz-gold); }
+.attack-card[data-anime="naruto"] { --card-accent: var(--naruto-blue); }
+.attack-card[data-anime="jjk"] { --card-accent: var(--jjk-purple); }
+
+/* ----------------------------------------------------------------
+   MODAL DIALOG (GESTURE GUIDE CHEAT SHEET)
+   ---------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-card {
+    background: #0d1322;
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--cyber-cyan);
+    letter-spacing: 1px;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.guide-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.guide-item-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.guide-item-gesture {
+    font-size: 12px;
+    color: var(--cyber-cyan);
+    font-weight: 600;
+}
+
+.guide-item-desc {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.4;
+}
+
+/* Permission / Camera Fallback Alert */
+.camera-error-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #ef4444;
+    padding: 24px 32px;
+    border-radius: 16px;
+    text-align: center;
+    z-index: 80;
+    display: none;
+    max-width: 480px;
+    box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+}
+
+.camera-error-banner h3 {
+    color: #ef4444;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.camera-error-banner p {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.camera-error-banner button {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHINOBI SAIYAN JUJUTSU - Gesture Control Anime Attacks</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- MediaPipe Hands CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- TOP HEADER BAR -->
+    <header class="header-bar">
+        <div class="brand-title">
+            <span class="brand-logo-icon">⚡</span>
+            <div class="brand-text">
+                <h1>Anime Gesture Attacks</h1>
+                <span>DBZ • NARUTO • JUJUTSU KAISEN</span>
+            </div>
+        </div>
+
+        <!-- Anime Universe Selector Tabs -->
+        <nav class="mode-tabs">
+            <button class="tab-btn active" data-mode="all">🌐 All Anime</button>
+            <button class="tab-btn" data-mode="dbz">🐉 Dragon Ball Z</button>
+            <button class="tab-btn" data-mode="naruto">🍃 Naruto</button>
+            <button class="tab-btn" data-mode="jjk">🤞 Jujutsu Kaisen</button>
+        </nav>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+            <button class="action-btn" id="muteBtn" title="Toggle Sound SFX">
+                🔊 <span>Audio ON</span>
+            </button>
+            <button class="action-btn active" id="voiceBtn" title="Toggle Anime Voice Shouts">
+                🗣️ <span>Voice ON</span>
+            </button>
+            <button class="action-btn active" id="mirrorBtn" title="Mirror Camera">
+                🪞 <span>Mirror</span>
+            </button>
+            <button class="action-btn active" id="skeletonBtn" title="Show Hand Skeleton">
+                🖐️ <span>Skeleton</span>
+            </button>
+            <button class="action-btn" id="snapshotBtn" title="Capture Photo with VFX">
+                📸 <span>Capture</span>
+            </button>
+            <button class="action-btn" id="guideBtn" title="Gesture Cheat Sheet">
+                📜 <span>Guide</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CAMERA & VFX WORKSPACE -->
+    <main class="stage-container">
+        <!-- Live Video Element -->
+        <video id="webcamVideo" autoplay playsinline muted></video>
+
+        <!-- Visual Effects Canvas -->
+        <canvas id="vfxCanvas"></canvas>
+
+        <!-- Hand Landmarks / Skeleton Overlay Canvas -->
+        <canvas id="skeletonCanvas"></canvas>
+
+        <!-- HUD Status Card -->
+        <div class="hud-status-card">
+            <div class="hud-row">
+                <span><span class="tracking-indicator" id="trackingIndicator"></span>HAND TRACKING</span>
+                <b id="hudFps">60 FPS</b>
+            </div>
+            <div class="hud-row">
+                <span>HANDS DETECTED:</span>
+                <b id="hudHandsCount">0</b>
+            </div>
+            <div class="hud-row">
+                <span>CURRENT JUTSU / ATTACK:</span>
+                <b id="hudActiveState" style="color: var(--cyber-cyan);">IDLE / READY</b>
+            </div>
+            <div class="charge-bar-container">
+                <div class="charge-bar-fill" id="chargeBar"></div>
+            </div>
+        </div>
+
+        <!-- Camera Error / Fallback Banner -->
+        <div class="camera-error-banner" id="cameraErrorBanner">
+            <h3>📷 Camera Permission Required</h3>
+            <p>Please allow webcam access in your browser to perform gesture-controlled anime attacks. You can still test all attacks and sound effects by clicking the cards in the bottom dock!</p>
+            <button onclick="window.app.startWebcam()">Retry Camera</button>
+        </div>
+    </main>
+
+    <!-- BOTTOM ATTACK QUICK-DOCK -->
+    <footer class="bottom-dock">
+        <!-- DBZ: Kamehameha -->
+        <div class="attack-card" data-anime="dbz" data-attack="kamehameha">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Kamehameha</span>
+                <span class="attack-card-badge" style="color: var(--dbz-gold)">DBZ</span>
+            </div>
+            <span class="attack-card-gesture">🤲 Cup hands ➔ Push forward</span>
+            <div class="attack-card-btn">TEST BLAST</div>
+        </div>
+
+        <!-- DBZ: Spirit Bomb -->
+        <div class="attack-card" data-anime="dbz" data-attack="spirit_bomb">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Spirit Bomb</span>
+                <span class="attack-card-badge" style="color: var(--dbz-gold)">DBZ</span>
+            </div>
+            <span class="attack-card-gesture">🙌 Hands in air ➔ Throw down</span>
+            <div class="attack-card-btn">TEST BLAST</div>
+        </div>
+
+        <!-- DBZ: Super Saiyan -->
+        <div class="attack-card" data-anime="dbz" data-attack="super_saiyan">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Super Saiyan Aura</span>
+                <span class="attack-card-badge" style="color: var(--dbz-gold)">DBZ</span>
+            </div>
+            <span class="attack-card-gesture">✊✊ Clench both fists</span>
+            <div class="attack-card-btn">TEST AURA</div>
+        </div>
+
+        <!-- Naruto: Rasengan -->
+        <div class="attack-card" data-anime="naruto" data-attack="rasengan">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Rasengan</span>
+                <span class="attack-card-badge" style="color: var(--naruto-blue)">NARUTO</span>
+            </div>
+            <span class="attack-card-gesture">✋ Open palm forward/up</span>
+            <div class="attack-card-btn">TEST VORTEX</div>
+        </div>
+
+        <!-- Naruto: Chidori -->
+        <div class="attack-card" data-anime="naruto" data-attack="chidori">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Chidori</span>
+                <span class="attack-card-badge" style="color: var(--naruto-blue)">NARUTO</span>
+            </div>
+            <span class="attack-card-gesture">👇 Claw hand downward</span>
+            <div class="attack-card-btn">TEST LIGHTNING</div>
+        </div>
+
+        <!-- Naruto: Shadow Clone -->
+        <div class="attack-card" data-anime="naruto" data-attack="shadow_clone">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Shadow Clone</span>
+                <span class="attack-card-badge" style="color: var(--naruto-orange)">NARUTO</span>
+            </div>
+            <span class="attack-card-gesture">🤞 Cross index fingers (+)</span>
+            <div class="attack-card-btn">TEST POOF</div>
+        </div>
+
+        <!-- Naruto: Amaterasu -->
+        <div class="attack-card" data-anime="naruto" data-attack="amaterasu">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Amaterasu</span>
+                <span class="attack-card-badge" style="color: #ef4444">NARUTO</span>
+            </div>
+            <span class="attack-card-gesture">✌️ Two-finger sword seal pointing</span>
+            <div class="attack-card-btn">TEST FLAMES</div>
+        </div>
+
+        <!-- JJK: Unlimited Void -->
+        <div class="attack-card" data-anime="jjk" data-attack="unlimited_void">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Unlimited Void</span>
+                <span class="attack-card-badge" style="color: var(--jjk-purple)">JJK</span>
+            </div>
+            <span class="attack-card-gesture">🤞 Gojo crossed fingers seal</span>
+            <div class="attack-card-btn">TEST DOMAIN</div>
+        </div>
+
+        <!-- JJK: Hollow Purple -->
+        <div class="attack-card" data-anime="jjk" data-attack="hollow_purple">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Hollow Purple</span>
+                <span class="attack-card-badge" style="color: var(--jjk-purple)">JJK</span>
+            </div>
+            <span class="attack-card-gesture">🔴🔵 Separate hands ➔ Clasp</span>
+            <div class="attack-card-btn">TEST PURPLE</div>
+        </div>
+
+        <!-- JJK: Malevolent Shrine -->
+        <div class="attack-card" data-anime="jjk" data-attack="malevolent_shrine">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Malevolent Shrine</span>
+                <span class="attack-card-badge" style="color: var(--sukuna-crimson)">JJK</span>
+            </div>
+            <span class="attack-card-gesture">🙏 Sukuna prayer mudra / clasp</span>
+            <div class="attack-card-btn">TEST CLEAVE</div>
+        </div>
+
+        <!-- JJK: Black Flash -->
+        <div class="attack-card" data-anime="jjk" data-attack="black_flash">
+            <div class="attack-card-header">
+                <span class="attack-card-title">Black Flash</span>
+                <span class="attack-card-badge" style="color: var(--sukuna-crimson)">JJK</span>
+            </div>
+            <span class="attack-card-gesture">👊 Fast punch strike toward camera</span>
+            <div class="attack-card-btn">TEST IMPACT</div>
+        </div>
+    </footer>
+
+    <!-- GESTURE CHEAT SHEET / GUIDE MODAL -->
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>📜 JUTSU & ATTACK GESTURE GUIDE</h2>
+                <button class="modal-close-btn" id="closeGuideBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- DBZ Items -->
+                <div class="guide-item" style="border-left: 3px solid var(--dbz-gold);">
+                    <div class="guide-item-title">
+                        <span>🐉 Kamehameha (かめはめ波)</span>
+                    </div>
+                    <div class="guide-item-gesture">🤲 Cup hands at hip ➔ Thrust forward</div>
+                    <div class="guide-item-desc">Hold both hands close together cupped to charge the cyan orb. Once charged, push your hands forward toward the screen to fire the beam!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--dbz-gold);">
+                    <div class="guide-item-title">
+                        <span>🐉 Spirit Bomb (元気玉)</span>
+                    </div>
+                    <div class="guide-item-gesture">🙌 Raise both hands high above head</div>
+                    <div class="guide-item-desc">Raise both hands up towards the sky to gather energy from the universe. Once the celestial sphere is ready, bring hands down to drop it!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--dbz-gold);">
+                    <div class="guide-item-title">
+                        <span>🐉 Super Saiyan Aura (超サイヤ人)</span>
+                    </div>
+                    <div class="guide-item-gesture">✊✊ Clench both hands into fists at chest/waist</div>
+                    <div class="guide-item-desc">Hold both fists tight to ignite roaring golden flames, bio-electric SSJ2 sparks, and vibrating screen tremors.</div>
+                </div>
+
+                <!-- Naruto Items -->
+                <div class="guide-item" style="border-left: 3px solid var(--naruto-blue);">
+                    <div class="guide-item-title">
+                        <span>🍃 Rasengan (螺旋丸)</span>
+                    </div>
+                    <div class="guide-item-gesture">✋ Single open palm facing forward/up</div>
+                    <div class="guide-item-desc">Hold your palm open like you're holding a sphere. Dense spinning chakra vortex rings will swirl rapidly in your palm.</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--naruto-blue);">
+                    <div class="guide-item-title">
+                        <span>🍃 Chidori (千鳥)</span>
+                    </div>
+                    <div class="guide-item-gesture">👇 Hand held pointing downward with clawed fingers</div>
+                    <div class="guide-item-desc">Bend fingers claw-like pointing down. Unbridled electrical lightning arcs violently crackle with the sound of 1,000 birds!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--naruto-orange);">
+                    <div class="guide-item-title">
+                        <span>🍃 Shadow Clone Jutsu (影分身の術)</span>
+                    </div>
+                    <div class="guide-item-gesture">🤞 Cross your two index fingers into a '+' seal</div>
+                    <div class="guide-item-desc">Extend both index fingers and intersect them into a cross seal. Giant anime smoke puffs erupt with classic ninja sound!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid #ef4444;">
+                    <div class="guide-item-title">
+                        <span>🍃 Amaterasu (天照)</span>
+                    </div>
+                    <div class="guide-item-gesture">✌️ Two-finger sword seal pointing forward</div>
+                    <div class="guide-item-desc">Extend index and middle fingers together (gun/sword seal) and point. Black flames and Mangekyo Sharingan ignite where you aim.</div>
+                </div>
+
+                <!-- JJK Items -->
+                <div class="guide-item" style="border-left: 3px solid var(--jjk-purple);">
+                    <div class="guide-item-title">
+                        <span>🤞 Domain Expansion: Unlimited Void (無量空処)</span>
+                    </div>
+                    <div class="guide-item-gesture">🤞 Gojo Satoru Hand Sign (crossed index/middle)</div>
+                    <div class="guide-item-desc">Form Gojo's signature mudra with index and middle finger pointing up. Reality shatters into a deep space black hole cosmic void!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--jjk-purple);">
+                    <div class="guide-item-title">
+                        <span>🤞 Hollow Purple (虚式「紫」)</span>
+                    </div>
+                    <div class="guide-item-gesture">🔴 Left open + 🔵 Right open ➔ Clasp hands together</div>
+                    <div class="guide-item-desc">Hold both hands open apart to summon Reversal: Red and Convergence: Blue. Bring hands together to fuse them into an all-erasing Purple Singularity!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--sukuna-crimson);">
+                    <div class="guide-item-title">
+                        <span>🤞 Malevolent Shrine (伏魔御厨子: 解・捌)</span>
+                    </div>
+                    <div class="guide-item-gesture">🙏 Sukuna Prayer Mudra / Clasp both hands flat</div>
+                    <div class="guide-item-desc">Clasp hands together flat in Sukuna's Enmaten prayer sign. Blood-red domain aura and razor-sharp Dismantle blade slashes slice the screen!</div>
+                </div>
+
+                <div class="guide-item" style="border-left: 3px solid var(--sukuna-crimson);">
+                    <div class="guide-item-title">
+                        <span>🤞 Black Flash (黒閃)</span>
+                    </div>
+                    <div class="guide-item-gesture">👊 Fast punch / fist thrust towards camera</div>
+                    <div class="guide-item-desc">Throw a rapid forward punch strike toward the camera. Space distorts within 0.000001 seconds followed by explosive jet-black lightning!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="gestures.js"></script>
+    <script src="effects.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
