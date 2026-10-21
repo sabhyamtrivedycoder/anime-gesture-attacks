@@ -67,22 +67,31 @@ class AnimeGestureApp {
         this.skeletonCanvas.height = height;
     }
 
+    async waitForHands(maxWaitMs = 8000) {
+        const start = Date.now();
+        while (typeof window.Hands === 'undefined' && (Date.now() - start < maxWaitMs)) {
+            await new Promise(r => setTimeout(r, 100));
+        }
+        return typeof window.Hands !== 'undefined';
+    }
+
     async initMediaPipe() {
         try {
-            if (typeof window.Hands === 'undefined') {
-                console.warn("MediaPipe Hands CDN loading...");
+            const hasHands = await this.waitForHands();
+            if (!hasHands) {
+                console.warn("MediaPipe Hands CDN load timed out; ready in interactive simulation/test mode.");
                 return;
             }
 
             this.handsDetector = new window.Hands({
-                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
 
             this.handsDetector.setOptions({
                 maxNumHands: 2,
                 modelComplexity: 1,
-                minDetectionConfidence: 0.65,
-                minTrackingConfidence: 0.65
+                minDetectionConfidence: 0.55,
+                minTrackingConfidence: 0.55
             });
 
             this.handsDetector.onResults((results) => this.onHandResults(results));
@@ -94,23 +103,45 @@ class AnimeGestureApp {
 
     async startWebcam() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user'
-                },
-                audio: false
-            });
+            if (!this.handsDetector) {
+                await this.initMediaPipe();
+            }
 
-            this.video.srcObject = stream;
-            await this.video.play();
-            this.isCameraRunning = true;
-            this.trackingIndicator.classList.remove('inactive');
-            this.cameraErrorBanner.style.display = 'none';
+            if (typeof window.Camera !== 'undefined') {
+                this.camera = new window.Camera(this.video, {
+                    onFrame: async () => {
+                        if (this.handsDetector && this.video.readyState >= 2) {
+                            try {
+                                await this.handsDetector.send({ image: this.video });
+                            } catch (e) {}
+                        }
+                    },
+                    width: 1280,
+                    height: 720
+                });
+                await this.camera.start();
+                this.isCameraRunning = true;
+                this.trackingIndicator.classList.remove('inactive');
+                this.cameraErrorBanner.style.display = 'none';
+            } else {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
 
-            // Start sending frames to MediaPipe
-            this.processVideoFrames();
+                this.video.srcObject = stream;
+                await this.video.play();
+                this.isCameraRunning = true;
+                this.trackingIndicator.classList.remove('inactive');
+                this.cameraErrorBanner.style.display = 'none';
+
+                // Start sending frames to MediaPipe
+                this.processVideoFrames();
+            }
         } catch (err) {
             console.warn("Camera access failed or denied:", err);
             this.trackingIndicator.classList.add('inactive');
@@ -163,50 +194,59 @@ class AnimeGestureApp {
         // Draw Skeleton overlay
         this.drawSkeleton(analysis.hands);
 
+        // Helpers for horizontal camera mirroring
+        const mapX = (x) => this.isMirrored ? (1 - x) : x;
+        const mapPt = (pt) => pt ? { x: mapX(pt.x), y: pt.y, z: pt.z } : { x: 0.5, y: 0.5 };
+
         // Process Triggered Attacks
         analysis.activeAttacks.forEach(atk => {
             switch (atk.type) {
                 case 'kamehameha_charge':
-                    this.vfx.renderKamehamehaCharge(atk.origin.x * this.vfxCanvas.width, atk.origin.y * this.vfxCanvas.height, atk.progress);
+                    this.vfx.renderKamehamehaCharge(mapX(atk.origin.x) * this.vfxCanvas.width, atk.origin.y * this.vfxCanvas.height, atk.progress);
                     break;
                 case 'kamehameha_blast':
-                    this.vfx.triggerKamehamehaBlast(atk.origin);
+                    this.vfx.triggerKamehamehaBlast(mapPt(atk.origin));
                     break;
                 case 'spirit_bomb_gather':
-                    this.vfx.renderSpiritBombGather(atk.center, atk.progress);
+                    this.vfx.renderSpiritBombGather(mapPt(atk.center), atk.progress);
                     break;
                 case 'spirit_bomb_impact':
-                    this.vfx.triggerSpiritBombImpact(atk.center);
+                    this.vfx.triggerSpiritBombImpact(mapPt(atk.center));
                     break;
                 case 'super_saiyan_aura':
-                    this.vfx.renderSuperSaiyanAura(atk.hands, atk.intensity);
+                    const mirroredHands = (atk.hands || []).map(h => ({
+                        ...h,
+                        center: mapPt(h.center),
+                        landmarks: (h.landmarks || []).map(p => mapPt(p))
+                    }));
+                    this.vfx.renderSuperSaiyanAura(mirroredHands, atk.intensity);
                     break;
                 case 'rasengan_sphere':
-                    this.vfx.renderRasengan(atk.origin);
+                    this.vfx.renderRasengan(mapPt(atk.origin));
                     break;
                 case 'chidori_sparks':
-                    this.vfx.renderChidori(atk.origin);
+                    this.vfx.renderChidori(mapPt(atk.origin));
                     break;
                 case 'shadow_clone_poof':
-                    this.vfx.triggerShadowClonePoof(atk.origin);
+                    this.vfx.triggerShadowClonePoof(mapPt(atk.origin));
                     break;
                 case 'amaterasu_ignition':
-                    this.vfx.triggerAmaterasu(atk.target);
+                    this.vfx.triggerAmaterasu(mapPt(atk.target));
                     break;
                 case 'unlimited_void':
-                    this.vfx.triggerUnlimitedVoid(atk.origin);
+                    this.vfx.triggerUnlimitedVoid(mapPt(atk.origin));
                     break;
                 case 'hollow_purple_prep':
-                    this.vfx.renderHollowPurplePrep(atk.redPos, atk.bluePos);
+                    this.vfx.renderHollowPurplePrep(mapPt(atk.redPos), mapPt(atk.bluePos));
                     break;
                 case 'hollow_purple_blast':
-                    this.vfx.triggerHollowPurpleBlast(atk.origin);
+                    this.vfx.triggerHollowPurpleBlast(mapPt(atk.origin));
                     break;
                 case 'malevolent_shrine':
-                    this.vfx.triggerMalevolentShrine(atk.origin);
+                    this.vfx.triggerMalevolentShrine(mapPt(atk.origin));
                     break;
                 case 'black_flash_impact':
-                    this.vfx.triggerBlackFlash(atk.origin);
+                    this.vfx.triggerBlackFlash(mapPt(atk.origin));
                     break;
             }
         });
@@ -219,6 +259,7 @@ class AnimeGestureApp {
 
         const w = this.skeletonCanvas.width;
         const h = this.skeletonCanvas.height;
+        const mapX = (x) => this.isMirrored ? (1 - x) : x;
 
         const connections = [
             [0,1],[1,2],[2,3],[3,4],       // Thumb
@@ -233,18 +274,18 @@ class AnimeGestureApp {
             const lm = hand.landmarks;
 
             // Connections
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+            ctx.lineWidth = 2.5;
             connections.forEach(([i, j]) => {
                 ctx.beginPath();
-                ctx.moveTo(lm[i].x * w, lm[i].y * h);
-                ctx.lineTo(lm[j].x * w, lm[j].y * h);
+                ctx.moveTo(mapX(lm[i].x) * w, lm[i].y * h);
+                ctx.lineTo(mapX(lm[j].x) * w, lm[j].y * h);
                 ctx.stroke();
             });
 
             // Joints
             lm.forEach((pt, idx) => {
-                const px = pt.x * w;
+                const px = mapX(pt.x) * w;
                 const py = pt.y * h;
                 const isTip = [4, 8, 12, 16, 20].includes(idx);
                 
@@ -372,67 +413,133 @@ class AnimeGestureApp {
             if (e.target === guideModal) guideModal.classList.remove('open');
         });
 
+        // Simulate Attack Button
+        const simulateBtn = document.getElementById('simulateBtn');
+        if (simulateBtn) {
+            simulateBtn.addEventListener('click', () => {
+                this.simulateNextAttack();
+            });
+        }
+
+        // Keyboard Shortcuts (1-9, 0, Space)
+        window.addEventListener('keydown', (e) => {
+            // Ignore if inside an input or typing
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const keyMap = {
+                '1': 'kamehameha',
+                '2': 'spirit_bomb',
+                '3': 'super_saiyan',
+                '4': 'rasengan',
+                '5': 'chidori',
+                '6': 'shadow_clone',
+                '7': 'unlimited_void',
+                '8': 'hollow_purple',
+                '9': 'malevolent_shrine',
+                '0': 'black_flash'
+            };
+
+            if (keyMap[e.key]) {
+                this.triggerAttackByName(keyMap[e.key]);
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                this.simulateNextAttack();
+            }
+        });
+
         // Attack Card Quick Test Buttons
         document.querySelectorAll('.attack-card').forEach(card => {
             card.addEventListener('click', () => {
-                this.audio.resume();
                 const attack = card.getAttribute('data-attack');
-                const center = { x: 0.5, y: 0.5 };
-
-                switch (attack) {
-                    case 'kamehameha':
-                        this.audio.playKamehamehaBlast();
-                        this.vfx.triggerKamehamehaBlast(center);
-                        break;
-                    case 'spirit_bomb':
-                        this.audio.playSpiritBombImpact();
-                        this.vfx.triggerSpiritBombImpact(center);
-                        break;
-                    case 'super_saiyan':
-                        this.audio.startSuperSaiyanAura();
-                        this.vfx.triggerScreenShake(20, 1.2);
-                        this.vfx.addBanner('超サイヤ人', 'SUPER SAIYAN', '#ffd700', 2.0);
-                        setTimeout(() => this.audio.stopSuperSaiyanAura(), 2500);
-                        break;
-                    case 'rasengan':
-                        this.audio.startRasengan();
-                        this.vfx.addBanner('螺旋丸', 'RASENGAN', '#00e5ff', 2.0);
-                        this.vfx.triggerScreenShake(14, 0.6);
-                        setTimeout(() => this.audio.stopRasengan(), 2200);
-                        break;
-                    case 'chidori':
-                        this.audio.startChidori();
-                        this.vfx.addBanner('千鳥', 'CHIDORI', '#38bdf8', 2.0);
-                        this.vfx.triggerScreenShake(16, 0.8);
-                        setTimeout(() => this.audio.stopChidori(), 2200);
-                        break;
-                    case 'shadow_clone':
-                        this.audio.playShadowClonePoof();
-                        this.vfx.triggerShadowClonePoof(center);
-                        break;
-                    case 'amaterasu':
-                        this.audio.playAmaterasu();
-                        this.vfx.triggerAmaterasu(center);
-                        break;
-                    case 'unlimited_void':
-                        this.audio.playUnlimitedVoid();
-                        this.vfx.triggerUnlimitedVoid(center);
-                        break;
-                    case 'hollow_purple':
-                        this.audio.playHollowPurple();
-                        this.vfx.triggerHollowPurpleBlast(center);
-                        break;
-                    case 'malevolent_shrine':
-                        this.audio.playDismantleCleave();
-                        this.vfx.triggerMalevolentShrine(center);
-                        break;
-                    case 'black_flash':
-                        this.audio.playBlackFlash();
-                        this.vfx.triggerBlackFlash(center);
-                        break;
-                }
+                this.triggerAttackByName(attack);
             });
         });
+    }
+
+    triggerAttackByName(attack, origin = { x: 0.5, y: 0.5 }) {
+        this.audio.resume();
+        const center = origin;
+
+        // Update HUD
+        if (this.hudActiveState) {
+            this.hudActiveState.textContent = attack.replace('_', ' ').toUpperCase();
+        }
+
+        switch (attack) {
+            case 'kamehameha':
+                this.audio.playKamehamehaBlast();
+                this.vfx.triggerKamehamehaBlast(center);
+                break;
+            case 'spirit_bomb':
+                this.audio.playSpiritBombImpact();
+                this.vfx.triggerSpiritBombImpact(center);
+                break;
+            case 'super_saiyan':
+                this.audio.startSuperSaiyanAura();
+                this.vfx.triggerScreenShake(20, 1.2);
+                this.vfx.addBanner('超サイヤ人', 'SUPER SAIYAN', '#ffd700', 2.0);
+                setTimeout(() => this.audio.stopSuperSaiyanAura(), 2500);
+                break;
+            case 'rasengan':
+                this.audio.startRasengan();
+                this.vfx.addBanner('螺旋丸', 'RASENGAN', '#00e5ff', 2.0);
+                this.vfx.triggerScreenShake(14, 0.6);
+                setTimeout(() => this.audio.stopRasengan(), 2200);
+                break;
+            case 'chidori':
+                this.audio.startChidori();
+                this.vfx.addBanner('千鳥', 'CHIDORI', '#38bdf8', 2.0);
+                this.vfx.triggerScreenShake(16, 0.8);
+                setTimeout(() => this.audio.stopChidori(), 2200);
+                break;
+            case 'shadow_clone':
+                this.audio.playShadowClonePoof();
+                this.vfx.triggerShadowClonePoof(center);
+                break;
+            case 'amaterasu':
+                this.audio.playAmaterasu();
+                this.vfx.triggerAmaterasu(center);
+                break;
+            case 'unlimited_void':
+                this.audio.playUnlimitedVoid();
+                this.vfx.triggerUnlimitedVoid(center);
+                break;
+            case 'hollow_purple':
+                this.audio.playHollowPurple();
+                this.vfx.triggerHollowPurpleBlast(center);
+                break;
+            case 'malevolent_shrine':
+                this.audio.playDismantleCleave();
+                this.vfx.triggerMalevolentShrine(center);
+                break;
+            case 'black_flash':
+                this.audio.playBlackFlash();
+                this.vfx.triggerBlackFlash(center);
+                break;
+        }
+    }
+
+    simulateNextAttack() {
+        const attackList = [
+            'kamehameha',
+            'rasengan',
+            'unlimited_void',
+            'chidori',
+            'hollow_purple',
+            'black_flash',
+            'super_saiyan',
+            'malevolent_shrine',
+            'shadow_clone',
+            'spirit_bomb'
+        ];
+        if (!this.simAttackIdx) this.simAttackIdx = 0;
+        const chosen = attackList[this.simAttackIdx % attackList.length];
+        this.simAttackIdx++;
+        
+        // Random slight jitter in origin around center
+        const ox = 0.45 + (Math.random() - 0.5) * 0.2;
+        const oy = 0.45 + (Math.random() - 0.5) * 0.2;
+        this.triggerAttackByName(chosen, { x: ox, y: oy });
     }
 }
 

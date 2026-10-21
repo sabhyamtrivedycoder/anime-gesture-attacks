@@ -9,8 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- MediaPipe Hands CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+    <!-- MediaPipe Hands & Camera Utils CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -48,6 +49,9 @@
             </button>
             <button class="action-btn" id="snapshotBtn" title="Capture Photo with VFX">
                 📸 <span>Capture</span>
+            </button>
+            <button class="action-btn" id="simulateBtn" title="Test/Simulate Random Anime Attack" style="border-color: rgba(0, 240, 255, 0.6); background: rgba(0, 240, 255, 0.15);">
+                ⚡ <span style="color: #00f0ff; font-weight: bold;">Simulate Attack</span>
             </button>
             <button class="action-btn" id="guideBtn" title="Gesture Cheat Sheet">
                 📜 <span>Guide</span>
@@ -88,8 +92,11 @@
         <!-- Camera Error / Fallback Banner -->
         <div class="camera-error-banner" id="cameraErrorBanner">
             <h3>📷 Camera Permission Required</h3>
-            <p>Please allow webcam access in your browser to perform gesture-controlled anime attacks. You can still test all attacks and sound effects by clicking the cards in the bottom dock!</p>
-            <button onclick="window.app.startWebcam()">Retry Camera</button>
+            <p>Please allow webcam access in your browser to perform gesture-controlled anime attacks. You can still test all attacks and sound effects by clicking the cards in the bottom dock or the simulate button below!</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 0.75rem;">
+                <button onclick="window.app.startWebcam()">Retry Camera</button>
+                <button onclick="window.app.simulateNextAttack()" style="background: linear-gradient(135deg, #a855f7, #06b6d4); color: #fff; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: bold; cursor: pointer;">⚡ Trigger Attack Demo</button>
+            </div>
         </div>
     </main>
 

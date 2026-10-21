@@ -94,7 +94,7 @@ class GestureRecognizer {
         const center = this.getHandCenter(lm);
         const tips = [lm[8], lm[12], lm[16], lm[20]];
         const avgTipDist = tips.reduce((sum, tip) => sum + this.dist(tip, center), 0) / 4;
-        return fingers.extendedCount === 0 || avgTipDist < 0.14 * this.sensitivity;
+        return fingers.extendedCount <= 1 || avgTipDist < 0.17 * this.sensitivity;
     }
 
     // Is hand open palm?
@@ -106,7 +106,7 @@ class GestureRecognizer {
     isClaw(lm, fingers) {
         const wrist = lm[0];
         const center = this.getHandCenter(lm);
-        const pointingDown = center.y > wrist.y;
+        const pointingDown = center.y > wrist.y - 0.05;
         const bentFingers = fingers.extendedCount >= 1 && fingers.extendedCount <= 4;
         return pointingDown && bentFingers;
     }
@@ -114,7 +114,7 @@ class GestureRecognizer {
     // Two-finger sword seal (Amaterasu): Index and middle extended, ring & pinky folded
     isSwordSeal(lm, fingers) {
         const tipDist = this.dist(lm[8], lm[12]);
-        return fingers.index && fingers.middle && !fingers.ring && !fingers.pinky && tipDist < 0.08 * this.sensitivity;
+        return fingers.index && fingers.middle && !fingers.pinky && tipDist < 0.12 * this.sensitivity;
     }
 
     // Gojo's Domain Expansion hand seal (crossed index over middle or index+middle vertically locked)
@@ -123,7 +123,7 @@ class GestureRecognizer {
         const tipDist = this.dist(lm[8], lm[12]);
         const midDist = this.dist(lm[7], lm[11]);
         // Fingers crossed or touching very close vertically
-        return tipDist < 0.05 * this.sensitivity && midDist < 0.05 * this.sensitivity;
+        return (tipDist < 0.08 * this.sensitivity) || (midDist < 0.08 * this.sensitivity);
     }
 
     // Sukuna prayer/shrine clasp (two hands pressed closely together)
@@ -131,7 +131,7 @@ class GestureRecognizer {
         const centerDist = this.dist(h1.center, h2.center);
         const wristDist = this.dist(h1.landmarks[0], h2.landmarks[0]);
         const indexDist = this.dist(h1.landmarks[8], h2.landmarks[8]);
-        return centerDist < 0.14 * this.sensitivity && wristDist < 0.16 * this.sensitivity && indexDist < 0.14 * this.sensitivity;
+        return centerDist < 0.20 * this.sensitivity && wristDist < 0.22 * this.sensitivity && indexDist < 0.20 * this.sensitivity;
     }
 
     // Update cooldown timers (called each frame with delta time in seconds)
@@ -210,25 +210,25 @@ class GestureRecognizer {
             // DBZ: Kamehameha (Cupped Hands -> Thrust Blast)
             // --------------------------------------------------------
             if (mode === 'all' || mode === 'dbz') {
-                const areCupped = centerDist < 0.22 * this.sensitivity && !h1.isFist && !h2.isFist;
+                const areCupped = centerDist < 0.28 * this.sensitivity && !h1.isFist && !h2.isFist;
                 
                 if (areCupped && !this.kameCharged) {
                     this.kameChargeTime += dt;
-                    if (this.kameChargeTime > 0.3 && this.kameChargeTime - dt <= 0.3) {
+                    if (this.kameChargeTime > 0.2 && this.kameChargeTime - dt <= 0.2) {
                         if (window.animeAudio) window.animeAudio.startKamehamehaCharge();
                     }
-                    if (this.kameChargeTime >= 1.2) {
+                    if (this.kameChargeTime >= 0.8) {
                         this.kameCharged = true;
                     }
                     activeAttacks.push({
                         type: 'kamehameha_charge',
                         origin: { x: (h1.center.x + h2.center.x) / 2, y: (h1.center.y + h2.center.y) / 2 },
-                        progress: Math.min(1.0, this.kameChargeTime / 1.2)
+                        progress: Math.min(1.0, this.kameChargeTime / 0.8)
                     });
-                } else if (this.kameCharged && (centerDist > 0.20 || (h1.isOpen && h2.isOpen))) {
+                } else if (this.kameCharged && (centerDist > 0.22 || (h1.isOpen && h2.isOpen))) {
                     // Unleash the blast!
                     if (this.cooldowns.kameBlast <= 0) {
-                        this.cooldowns.kameBlast = 2.5;
+                        this.cooldowns.kameBlast = 2.0;
                         this.kameChargeTime = 0;
                         this.kameCharged = false;
                         if (window.animeAudio) window.animeAudio.playKamehamehaBlast();
@@ -246,18 +246,18 @@ class GestureRecognizer {
                 // --------------------------------------------------------
                 // DBZ: Spirit Bomb / Genki Dama (Both hands raised high)
                 // --------------------------------------------------------
-                const handsRaised = h1.landmarks[0].y < 0.32 && h2.landmarks[0].y < 0.32 && h1.isOpen && h2.isOpen;
+                const handsRaised = (h1.landmarks[0].y < 0.48 && h2.landmarks[0].y < 0.48) && h1.isOpen && h2.isOpen;
                 if (handsRaised) {
                     this.spiritBombChargeTime += dt;
-                    if (this.spiritBombChargeTime > 0.4 && this.spiritBombChargeTime - dt <= 0.4) {
+                    if (this.spiritBombChargeTime > 0.3 && this.spiritBombChargeTime - dt <= 0.3) {
                         if (window.animeAudio) window.animeAudio.playSpiritBombCharge();
                     }
                     activeAttacks.push({
                         type: 'spirit_bomb_gather',
-                        progress: Math.min(1.0, this.spiritBombChargeTime / 2.0),
-                        center: { x: 0.5, y: 0.22 }
+                        progress: Math.min(1.0, this.spiritBombChargeTime / 1.5),
+                        center: { x: 0.5, y: 0.25 }
                     });
-                } else if (this.spiritBombChargeTime >= 1.5 && h1.landmarks[0].y > 0.45 && h2.landmarks[0].y > 0.45) {
+                } else if (this.spiritBombChargeTime >= 1.2 && h1.landmarks[0].y > 0.50 && h2.landmarks[0].y > 0.50) {
                     // Dropped hands -> Detonation!
                     if (this.cooldowns.spiritBombImpact <= 0) {
                         this.cooldowns.spiritBombImpact = 3.5;
