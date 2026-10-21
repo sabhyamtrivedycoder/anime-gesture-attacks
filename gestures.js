@@ -47,7 +47,7 @@ class GestureRecognizer {
         if (!p1 || !p2) return 999;
         const dx = p1.x - p2.x;
         const dy = p1.y - p2.y;
-        const dz = (p1.z && p2.z) ? (p1.z - p2.z) : 0;
+        const dz = (p1.z !== undefined && p2.z !== undefined) ? (p1.z - p2.z) : 0;
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -464,4 +464,9 @@ class GestureRecognizer {
 }
 
 // Global gesture recognizer singleton
-window.gestureRecognizer = new GestureRecognizer();
+if (typeof window !== 'undefined') {
+    window.gestureRecognizer = new GestureRecognizer();
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = GestureRecognizer;
+}
